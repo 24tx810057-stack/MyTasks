@@ -87,6 +87,7 @@ class TodoApp:
         self.time_deadline = SimpleTimePicker(frm)
         self.time_deadline.grid(row=1, column=3, sticky="w")
 
+        # ===== Ưu tiên =====
         ttk.Label(frm, text="Ưu tiên:").grid(row=2, column=0, sticky="w")
         self.cmb_priority = ttk.Combobox(
             frm, values=["Cao", "Trung bình", "Thấp"], width=12, state="readonly"
@@ -94,9 +95,14 @@ class TodoApp:
         self.cmb_priority.set("Trung bình")
         self.cmb_priority.grid(row=2, column=1, sticky="w", padx=6)
 
+        # 👇 Bind combobox để không mất focus khi chọn
+        self.cmb_priority.bind("<ButtonPress-1>", self.start_edit_priority)
+        self.cmb_priority.bind("<<ComboboxSelected>>", self.end_edit_priority)
+
+        # ===== Chi tiết =====
         ttk.Label(frm, text="Chi tiết:").grid(row=3, column=0, sticky="nw")
-        self.txt_detail = tk.Text(frm, height=6, width=48)
-        self.txt_detail.grid(row=3, column=1, columnspan=3, sticky="we", padx=6, pady=4)
+        self.txt_detail = tk.Text(frm, height=8, width=48)
+        self.txt_detail.grid(row=3, column=1, columnspan=3, sticky="we", padx=8, pady=6)
 
         # ===== Buttons =====
         btns = ttk.Frame(root, padding=(10, 0))
@@ -124,7 +130,7 @@ class TodoApp:
             listfrm, height=10, activestyle="dotbox", font=("Segoe UI", 10)
         )
         self.listbox.pack(side="left", fill="both", expand=True)
-        self.listbox.bind_class("Listbox", "<<ListboxSelect>>", self.on_select, add="+")
+        self.listbox.bind("<<ListboxSelect>>", self.on_select)
 
         sb = ttk.Scrollbar(listfrm, orient="vertical", command=self.listbox.yview)
         sb.pack(side="right", fill="y")
@@ -145,7 +151,6 @@ class TodoApp:
             wraplength=820,
         )
         self.lbl_info.pack(fill="x", padx=4, pady=4)
-
         self.refresh()
 
     # ===== CRUD =====
@@ -250,9 +255,15 @@ class TodoApp:
         self.lbl_info.config(text=f"Tổng: {len(self.tasks)} | Hoàn thành: {done_count}")
 
     def on_select(self, _evt):
-        idx = self.current_index()
-        if idx is None:
+        if self.editing_priority: # tránh mất focus khi chọn combobox
             return
+        w = self.root.focus_get()
+        if w is not None and ("Combobox" in str(w) or "TCombobox" in str(w)):
+            return
+         # 👉 lấy vị trí task đang chọn
+        idx = self.current_index()
+        if idx is None or idx >= len(self.tasks):
+            return       
         t = self.tasks[idx]
         self.ent_title.delete(0, tk.END)
         self.ent_title.insert(0, t.title)
@@ -278,6 +289,15 @@ class TodoApp:
         )
         self.lbl_info.config(text=info)
 
+    # ===== Chống mất focus khi chọn combobox =====
+    def start_edit_priority(self, _evt):
+        # Bật cờ NGAY LẬP TỨC để hàm on_select thấy ngay
+        self.editing_priority = True
+
+    def end_edit_priority(self, _evt):
+        # reset lại sau khi chọn xong
+        self.root.after(250, lambda: setattr(self, "editing_priority", False))
+
 
 def run_app():
     root = ttk.Window(themename="flatly")
@@ -302,7 +322,7 @@ def run_app():
 
     # App chính
     app = TodoApp(root)
-    w, h = 900, 720
+    w, h = 900, 800
     x = (root.winfo_screenwidth() - w) // 2
     y = (root.winfo_screenheight() - h) // 2
     root.geometry(f"{w}x{h}+{x}+{y}")

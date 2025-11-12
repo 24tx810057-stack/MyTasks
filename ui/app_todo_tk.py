@@ -10,7 +10,7 @@ from models.task_model import Task
 DATE_FMT = "%d-%m-%Y %H:%M"
 
 
-# ===== Time picker =====
+# ==Time picker ==
 class SimpleTimePicker(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -46,7 +46,7 @@ class SimpleTimePicker(ttk.Frame):
             self.minute.set("00")
 
 
-# ===== Main App =====
+# == Main App ==
 class TodoApp:
     def __init__(self, root):
         self.root = root
@@ -78,7 +78,7 @@ class TodoApp:
             header, text="Theo dõi - Sắp xếp - Hoàn thành", bootstyle="secondary"
         ).pack(side="left", padx=10)
 
-        # ===== Form =====
+        # === Form ==
         frm = ttk.Labelframe(
             root, text=" Thông tin công việc ", padding=10, bootstyle="info"
         )
@@ -116,7 +116,7 @@ class TodoApp:
         self.txt_detail = tk.Text(frm, height=8, width=48)
         self.txt_detail.grid(row=3, column=1, columnspan=3, sticky="we", padx=6, pady=4)
 
-        # ===== Buttons =====
+        # === Buttons ===
         btns = ttk.Frame(root, padding=(10, 0))
         btns.pack(fill="x", pady=(2, 8))
         ttk.Button(
@@ -135,7 +135,7 @@ class TodoApp:
             btns, text="Làm mới", command=self.refresh, bootstyle="warning-outline"
         ).pack(side="left", padx=4)
 
-        # ===== Danh sách =====
+        # == Danh sách ===
         listfrm = ttk.Labelframe(root, text=" Danh sách công việc ", padding=8)
         listfrm.pack(fill="both", expand=True, padx=5, pady=5)
         self.listbox = tk.Listbox(
@@ -172,7 +172,7 @@ class TodoApp:
 
         self.refresh()
 
-    # ===== CRUD =====
+    # == CRUD ==
     def add_task(self):
         title = self.ent_title.get().strip()
         date_str = self.date_deadline.entry.get().strip()
@@ -253,7 +253,7 @@ class TodoApp:
         save_tasks(self.tasks)
         self.refresh()
 
-    # ===== Popup chọn ưu tiên =====
+    # === Popup chọn ưu tiên ==
     def show_priority_popup(self):
         popup = tk.Toplevel(self.root)
         popup.overrideredirect(True)
@@ -291,7 +291,7 @@ class TodoApp:
             100, lambda: popup.wait_window()
         )  # Dừng ở đây tới khi popup bị destroy
 
-    # ===== Helpers =====
+    # == Helpers ==
     def current_index(self):
         sel = self.listbox.curselection()
         return sel[0] if sel else None
@@ -351,10 +351,11 @@ class TodoApp:
 
 
 def run_app():
-    root = ttk.Window(themename="flatly")
+    # Các theme: cosmo, united, yeti, solar, simplex, pulse
+    root = ttk.Window(themename="united", size=(800, 600))
     root.title("MyTasks - Đang khởi động...")
 
-    # Splash screen
+    # =Splash screen ==
     splash = ttk.Frame(root, padding=60)
     ttk.Label(
         splash, text="Đang khởi động MyTasks...", font=("Segoe UI", 16, "bold")
@@ -365,27 +366,24 @@ def run_app():
     splash.pack(expand=True)
 
     root.update()
-    root.after(2000)  # Giữ splash 2 giây
-    root.update()  # ép vẽ lại (để thấy hiệu ứng)
 
-    splash.destroy()  # Sau đó mới phá splash
+    # Giữ splash 2 giây rồi chuyển qua app chính
+    root.after(2000, lambda: start_main_app(root, splash))
+    root.mainloop()
+
+
+def start_main_app(root, splash):
+    # Hủy splash, khởi tạo app chính 
+    splash.destroy()
     root.iconbitmap("logo.ico")
 
-    # App chính
     app = TodoApp(root)
+
+    # Căn giữa cửa sổ
     w, h = 800, 900
     x = (root.winfo_screenwidth() - w) // 2
     y = (root.winfo_screenheight() - h) // 2
     root.geometry(f"{w}x{h}+{x}+{y}")
-    root.attributes("-alpha", 0.0)
-
-    for i in range(0, 11):
-        root.attributes("-alpha", i / 10)
-        root.update()
-        root.after(80, lambda: None)  # hiệu ứng sáng dần rõ hơn
-
-    root.mainloop()
-
 
 if __name__ == "__main__":
     run_app()

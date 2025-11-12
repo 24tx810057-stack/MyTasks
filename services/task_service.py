@@ -5,14 +5,14 @@ from models.task_model import Task
 DATA_FILE = "data/tasks.json"
 DATE_FMT = "%d-%m-%Y %H:%M"
 
-# ===== Helpers =====
+# == Helpers =
 def now_str():
     return datetime.now().strftime(DATE_FMT)
 
 def parse_dt(s):
     return datetime.strptime(s, DATE_FMT)
 
-# ===== CRUD & Utils =====
+# == CRUD & Utils ====
 def load_tasks():
     if not os.path.exists(DATA_FILE):
         return []

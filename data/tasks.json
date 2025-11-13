@@ -2,73 +2,41 @@
   {
     "title": "Test task",
     "detail": "Nộp bt 123",
-    "deadline": "12-11-2025 16:33",
-    "priority": "Cao",
-    "done": false,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Test task",
-    "detail": "Nộp bt 123",
-    "deadline": "14-11-2025 16:33",
-    "priority": "Cao",
-    "done": false,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Test task",
-    "detail": "Nộp bt 123",
-    "deadline": "14-11-2025 16:33",
-    "priority": "Cao",
-    "done": false,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Test task",
-    "detail": "Nộp bt 123",
     "deadline": "14-11-2025 16:33",
     "priority": "Trung bình",
     "done": false,
     "created_at": "12-11-2025 14:16"
   },
   {
-    "title": "Test task",
-    "detail": "Nộp bt 123",
-    "deadline": "14-11-2025 16:33",
-    "priority": "Trung bình",
-    "done": false,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Gửi báo cáo hoàn chỉnh Python",
-    "detail": "Gửi báo cáo hoàn chỉnh Python",
-    "deadline": "26-11-2025 18:30",
+    "title": "Nộp file doc đồ án Python",
+    "detail": "Nộp file doc",
+    "deadline": "26-11-2025 18:33",
     "priority": "Cao",
     "done": false,
-    "created_at": "12-11-2025 19:48"
+    "created_at": "13-11-2025 14:33"
   },
   {
     "title": "Test task",
     "detail": "Nộp bt 123",
-    "deadline": "14-11-2025 16:33",
-    "priority": "Cao",
-    "done": true,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Test task",
-    "detail": "Nộp bt 123",
-    "deadline": "14-11-2025 16:33",
-    "priority": "Trung bình",
-    "done": true,
-    "created_at": "12-11-2025 14:16"
-  },
-  {
-    "title": "Test task",
-    "detail": "Tesk task ngày 12/11/2025, Tesk task ngày 12/11/2025, Tesk task ngày 12/11/2025",
     "deadline": "14-11-2025 16:33",
     "priority": "Thấp",
     "done": true,
     "created_at": "12-11-2025 14:16"
+  },
+  {
+    "title": "Test task123",
+    "detail": "Nộp bt 123",
+    "deadline": "14-11-2025 16:33",
+    "priority": "Thấp",
+    "done": true,
+    "created_at": "13-11-2025 14:07"
+  },
+  {
+    "title": "Test task",
+    "detail": "Nộp bt 123",
+    "deadline": "18-11-2025 16:33",
+    "priority": "Cao",
+    "done": true,
+    "created_at": "13-11-2025 14:06"
   }
 ]

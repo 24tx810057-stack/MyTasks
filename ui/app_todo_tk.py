@@ -3,14 +3,11 @@ from tkinter import messagebox
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.widgets import DateEntry
-from datetime import datetime
-from services.task_service import load_tasks, save_tasks, sort_tasks, fmt_row, parse_dt
-from models.task_model import Task
+from services.task_service import TaskService
 
 DATE_FMT = "%d-%m-%Y %H:%M"
 
 
-# ==Time picker ==
 class SimpleTimePicker(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -18,17 +15,14 @@ class SimpleTimePicker(ttk.Frame):
         self.hour = tk.StringVar(value="00")
         self.minute = tk.StringVar(value="00")
 
-        # Giảm width, canh giữa, thêm padding nhẹ cho đẹp
         spin_style = {"justify": "center", "width": 2, "wrap": True}
 
         ttk.Spinbox(self, from_=0, to=23, textvariable=self.hour, **spin_style).grid(
             row=0, column=0, padx=(0, 2)
         )
-
         ttk.Label(self, text=":", font=("Segoe UI", 10, "bold")).grid(
             row=0, column=1, padx=(0, 2)
         )
-
         ttk.Spinbox(self, from_=0, to=59, textvariable=self.minute, **spin_style).grid(
             row=0, column=2
         )
@@ -46,7 +40,6 @@ class SimpleTimePicker(ttk.Frame):
             self.minute.set("00")
 
 
-# == Main App ==
 class TodoApp:
     def __init__(self, root):
         self.root = root
@@ -54,8 +47,10 @@ class TodoApp:
         self.mouse_down = False
         self.updating = False
         self.editing_priority = False
-        self.tasks = load_tasks()
-        sort_tasks(self.tasks)
+
+        # dùng service
+        self.service = TaskService()
+        self.tasks = self.service.tasks
 
         self.root.bind_all(
             "<ButtonPress-1>", lambda e: setattr(self, "mouse_down", True)
@@ -78,28 +73,23 @@ class TodoApp:
             header, text="Theo dõi - Sắp xếp - Hoàn thành", bootstyle="secondary"
         ).pack(side="left", padx=10)
 
-        # === Form ==
         frm = ttk.Labelframe(
             root, text=" Thông tin công việc ", padding=10, bootstyle="info"
         )
         frm.pack(fill="x", padx=12, pady=8)
 
-        # Tiêu đề
         ttk.Label(frm, text="Tiêu đề:").grid(row=0, column=0, sticky="w", pady=4)
         self.ent_title = ttk.Entry(frm, width=48)
         self.ent_title.grid(row=0, column=1, columnspan=3, sticky="we", padx=6, pady=4)
 
-        # Ngày hết hạn
         ttk.Label(frm, text="Ngày hết hạn:").grid(row=1, column=0, sticky="w", pady=4)
         self.date_deadline = DateEntry(frm, width=12, dateformat="%d-%m-%Y")
         self.date_deadline.grid(row=1, column=1, sticky="w", padx=6, pady=4)
 
-        # Giờ
         ttk.Label(frm, text="Giờ:").grid(row=1, column=2, sticky="e", pady=4)
         self.time_deadline = SimpleTimePicker(frm)
         self.time_deadline.grid(row=1, column=3, sticky="w", pady=4)
 
-        # Ưu tiên (custom popup)
         ttk.Label(frm, text="Ưu tiên:").grid(row=2, column=0, sticky="w", pady=4)
         self.priority_var = tk.StringVar(value="Trung bình")
         self.btn_priority = ttk.Button(
@@ -111,12 +101,10 @@ class TodoApp:
         )
         self.btn_priority.grid(row=2, column=1, sticky="w", padx=6, pady=4)
 
-        # Chi tiết
         ttk.Label(frm, text="Chi tiết:").grid(row=3, column=0, sticky="nw", pady=4)
         self.txt_detail = tk.Text(frm, height=8, width=48)
         self.txt_detail.grid(row=3, column=1, columnspan=3, sticky="we", padx=6, pady=4)
 
-        # === Buttons ===
         btns = ttk.Frame(root, padding=(10, 0))
         btns.pack(fill="x", pady=(2, 8))
         ttk.Button(
@@ -135,7 +123,6 @@ class TodoApp:
             btns, text="Làm mới", command=self.refresh, bootstyle="warning-outline"
         ).pack(side="left", padx=4)
 
-        # == Danh sách ===
         listfrm = ttk.Labelframe(root, text=" Danh sách công việc ", padding=8)
         listfrm.pack(fill="both", expand=True, padx=5, pady=5)
         self.listbox = tk.Listbox(
@@ -148,7 +135,6 @@ class TodoApp:
         sb.pack(side="right", fill="y")
         self.listbox.config(yscrollcommand=sb.set)
 
-        # Khung chi tiết công việc
         info = ttk.Labelframe(
             root,
             text=" Chi tiết ",
@@ -184,31 +170,25 @@ class TodoApp:
         if not title:
             messagebox.showwarning("Thiếu dữ liệu", "Vui lòng nhập tiêu đề.")
             return
+
         try:
-            _ = parse_dt(deadline)
-        except Exception:
+            self.service.parse_dt(deadline)
+        except:
             messagebox.showwarning(
                 "Sai định dạng", f"Deadline phải theo định dạng {DATE_FMT}"
             )
             return
 
-        task = Task(title, detail, deadline, priority)
-        self.tasks.append(task)
-        sort_tasks(self.tasks)
-        save_tasks(self.tasks)
+        self.service.add_task(title, detail, deadline, priority)
+
         self.clear_form()
         self.refresh()
-        messagebox.showinfo("Thành công", "Đã thêm công việc mới.")
-        self.ent_title.focus_set()
+        messagebox.showinfo("Thành công", "Đã thêm công việc.")
 
     def update_task(self):
-        if self.updating:
-            return
         idx = self.current_index()
-        if idx is None or idx >= len(self.tasks):
-            messagebox.showwarning("Lỗi", "Không tìm thấy công việc để cập nhật.")
+        if idx is None:
             return
-        self.updating = True
 
         title = self.ent_title.get().strip()
         date_str = self.date_deadline.entry.get().strip()
@@ -218,29 +198,25 @@ class TodoApp:
         detail = self.txt_detail.get("1.0", "end").strip()
 
         try:
-            _ = parse_dt(deadline)
-        except Exception:
+            self.service.parse_dt(deadline)
+        except:
             messagebox.showwarning(
                 "Sai định dạng", f"Deadline phải theo định dạng {DATE_FMT}"
             )
-            self.updating = False
             return
 
-        t = self.tasks[idx]
-        t.title, t.detail, t.deadline, t.priority = title, detail, deadline, priority
-        sort_tasks(self.tasks)
-        save_tasks(self.tasks)
+        self.service.update_task(idx, title, detail, deadline, priority)
+
         self.refresh()
-        messagebox.showinfo("Đã cập nhật", "Cập nhật công việc thành công.")
-        self.updating = False
+        messagebox.showinfo("OK", "Đã cập nhật.")
 
     def delete_task(self):
         idx = self.current_index()
         if idx is None:
             return
-        if messagebox.askyesno("Xóa", "Bạn có chắc muốn xóa công việc này?"):
-            self.tasks.pop(idx)
-            save_tasks(self.tasks)
+
+        if messagebox.askyesno("Xóa", "Xác nhận xóa?"):
+            self.service.delete_task(idx)
             self.clear_form()
             self.refresh()
 
@@ -248,9 +224,7 @@ class TodoApp:
         idx = self.current_index()
         if idx is None:
             return
-        self.tasks[idx].done = True
-        sort_tasks(self.tasks)
-        save_tasks(self.tasks)
+        self.service.mark_done(idx)
         self.refresh()
 
     # === Popup chọn ưu tiên ==
@@ -270,7 +244,7 @@ class TodoApp:
         ]
 
         def select_priority(value, style):
-            self.priority_var.set(value)  # Cập nhật biến ngay lập tức
+            self.priority_var.set(value)
             self.btn_priority.config(text=value, bootstyle=style)
             popup.destroy()
 
@@ -282,16 +256,16 @@ class TodoApp:
                 width=14,
                 command=lambda t=text, s=style: select_priority(t, s),
             ).pack(fill="x", pady=2)
+
         try:
             popup.focus_set()
-            popup.grab_set()  # giữ chuột và bàn phím trong cửa sổ này cho đến khi nó đóng
+            popup.grab_set()
         except:
             pass
-        popup.after(
-            100, lambda: popup.wait_window()
-        )  # Dừng ở đây tới khi popup bị destroy
 
-    # == Helpers ==
+        popup.after(100, lambda: popup.wait_window())
+
+    # == Helpers UI ==
     def current_index(self):
         sel = self.listbox.curselection()
         return sel[0] if sel else None
@@ -302,9 +276,8 @@ class TodoApp:
 
     def refresh(self):
         self.listbox.delete(0, tk.END)
-        sort_tasks(self.tasks)
         for t in self.tasks:
-            label = fmt_row(t)
+            label = self.service.fmt_row(t)
             self.listbox.insert(tk.END, label)
             color = "#E9FBE9" if t.done else "#FFFBEA"
             self.listbox.itemconfig(tk.END, bg=color)
@@ -312,7 +285,6 @@ class TodoApp:
         self.lbl_info.config(text=f"Tổng: {len(self.tasks)} | Hoàn thành: {done_count}")
 
     def on_select(self, _evt):
-        #  lấy vị trí task đang chọn
         idx = self.current_index()
         if idx is None or idx >= len(self.tasks):
             return
@@ -323,13 +295,13 @@ class TodoApp:
         self.txt_detail.insert("1.0", t.detail)
         if t.deadline:
             try:
-                dt = parse_dt(t.deadline)
+                dt = self.service.parse_dt(t.deadline)
                 self.date_deadline.entry.delete(0, tk.END)
                 self.date_deadline.entry.insert(0, dt.strftime("%d-%m-%Y"))
                 self.time_deadline.set(dt.strftime("%H:%M"))
             except:
                 pass
-        # Cập nhật label chi tiết
+
         info = (
             f"Tiêu đề: {t.title}\n"
             f"Chi tiết: {t.detail}\n"
@@ -339,7 +311,7 @@ class TodoApp:
             f"Trạng thái: {'Hoàn thành' if t.done else 'Chưa xong'}"
         )
         self.lbl_info.config(text=info)
-        # Cập nhật nút ưu tiên cho đúng màu
+
         style_map = {
             "Cao": "danger",
             "Trung bình": "warning",
@@ -351,7 +323,7 @@ class TodoApp:
 
 
 def run_app():
-    # Các theme: cosmo, united, yeti, solar, simplex, pulse
+    # Các theme: cosmo, united, yeti, solar, simplex, pulse, minty
     root = ttk.Window(themename="united", size=(800, 600))
     root.title("MyTasks - Đang khởi động...")
 
@@ -373,10 +345,9 @@ def run_app():
 
 
 def start_main_app(root, splash):
-    # Hủy splash, khởi tạo app chính 
+    # Hủy splash, khởi tạo app chính
     splash.destroy()
     root.iconbitmap("logo.ico")
-
     app = TodoApp(root)
 
     # Căn giữa cửa sổ
@@ -384,6 +355,7 @@ def start_main_app(root, splash):
     x = (root.winfo_screenwidth() - w) // 2
     y = (root.winfo_screenheight() - h) // 2
     root.geometry(f"{w}x{h}+{x}+{y}")
+
 
 if __name__ == "__main__":
     run_app()

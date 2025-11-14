@@ -102,7 +102,7 @@ class TodoApp:
         self.btn_priority.grid(row=2, column=1, sticky="w", padx=6, pady=4)
 
         ttk.Label(frm, text="Chi tiết:").grid(row=3, column=0, sticky="nw", pady=4)
-        self.txt_detail = tk.Text(frm, height=8, width=48)
+        self.txt_detail = tk.Text(frm, height=10, width=48)
         self.txt_detail.grid(row=3, column=1, columnspan=3, sticky="we", padx=6, pady=4)
 
         btns = ttk.Frame(root, padding=(10, 0))
@@ -125,6 +125,37 @@ class TodoApp:
 
         listfrm = ttk.Labelframe(root, text=" Danh sách công việc ", padding=8)
         listfrm.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # == Bộ lọc ==
+        filter_bar = ttk.Frame(listfrm)
+        filter_bar.pack(fill="x", pady=(0, 8))
+
+        # Lọc trạng thái
+        ttk.Label(filter_bar, text="Trạng thái:").pack(side="left", padx=(0, 4))
+        self.filter_status = tk.StringVar(value="Tất cả")
+        cb_status = ttk.Combobox(
+            filter_bar,
+            textvariable=self.filter_status,
+            values=["Tất cả", "Hoàn thành", "Chưa hoàn thành"],
+            width=16,
+            state="readonly",
+        )
+        cb_status.pack(side="left", padx=(0, 20))
+        cb_status.bind("<<ComboboxSelected>>", lambda e: self.apply_filter())
+
+        # Lọc ưu tiên
+        ttk.Label(filter_bar, text="Ưu tiên:").pack(side="left", padx=(0, 4))
+        self.filter_priority = tk.StringVar(value="Tất cả")
+        cb_priority = ttk.Combobox(
+            filter_bar,
+            textvariable=self.filter_priority,
+            values=["Tất cả", "Cao", "Trung bình", "Thấp"],
+            width=10,
+            state="readonly",
+        )
+        cb_priority.pack(side="left")
+        cb_priority.bind("<<ComboboxSelected>>", lambda e: self.apply_filter())
+
         self.listbox = tk.Listbox(
             listfrm, height=8, activestyle="dotbox", font=("Segoe UI", 10)
         )
@@ -263,26 +294,94 @@ class TodoApp:
         except:
             pass
 
-        popup.after(100, lambda: popup.wait_window())
+        # popup.after(100, lambda: popup.wait_window())
 
     # == Helpers UI ==
     def current_index(self):
         sel = self.listbox.curselection()
         return sel[0] if sel else None
 
+    # Clear sạch form
     def clear_form(self):
+        # tiêu đề
         self.ent_title.delete(0, tk.END)
+
+        # chi tiết
         self.txt_detail.delete("1.0", tk.END)
 
-    def refresh(self):
+        # reset ngày
+        try:
+            self.date_deadline.entry.delete(0, tk.END)
+            from datetime import datetime
+
+            self.date_deadline.entry.insert(0, datetime.now().strftime("%d-%m-%Y"))
+        except:
+            pass
+
+        # reset giờ
+        self.time_deadline.set("00:00")
+
+        # reset ưu tiên
+        self.priority_var.set("Trung bình")
+        self.btn_priority.config(text="Trung bình", bootstyle="warning")
+
+    def update_listbox(self, data):
         self.listbox.delete(0, tk.END)
-        for t in self.tasks:
+
+        for i, t in enumerate(data):
             label = self.service.fmt_row(t)
-            self.listbox.insert(tk.END, label)
-            color = "#E9FBE9" if t.done else "#FFFBEA"
-            self.listbox.itemconfig(tk.END, bg=color)
-        done_count = sum(1 for t in self.tasks if t.done)
-        self.lbl_info.config(text=f"Tổng: {len(self.tasks)} | Hoàn thành: {done_count}")
+            self.listbox.insert(i, label)
+
+            # tô màu
+            if t.done:
+                color = "#E9FBE9"
+            else:
+                if t.priority == "Cao":
+                    color = "#FFE5E5"
+                elif t.priority == "Thấp":
+                    color = "#E8FFF0"
+                else:
+                    color = "#FFFBEA"
+
+            self.listbox.itemconfig(i, bg=color)
+
+    def apply_filter(self):
+        status = self.filter_status.get()
+        priority = self.filter_priority.get()
+
+        filtered = self.tasks
+
+        # lọc trạng thái
+        if status == "Hoàn thành":
+            filtered = [t for t in filtered if t.done]
+        elif status == "Chưa hoàn thành":
+            filtered = [t for t in filtered if not t.done]
+
+        # lọc ưu tiên
+        if priority != "Tất cả":
+            filtered = [t for t in filtered if t.priority == priority]
+
+        # cập nhật listbox
+        self.update_listbox(filtered)
+
+    # Refesh lại
+    def refresh(self):
+        # luôn sync lại
+        self.tasks = self.service.tasks
+
+        # Sắp xếp theo deadline
+        try:
+            self.tasks.sort(
+                key=lambda t: (
+                    self.service.parse_dt(t.deadline) if t.deadline else float("inf")
+                )
+            )
+        except:
+            pass
+
+        #  Reset hết ô nhập mỗi lần refresh
+        self.clear_form()
+        self.apply_filter()
 
     def on_select(self, _evt):
         idx = self.current_index()
@@ -324,7 +423,14 @@ class TodoApp:
 
 def run_app():
     # Các theme: cosmo, united, yeti, solar, simplex, pulse, minty
-    root = ttk.Window(themename="united", size=(800, 600))
+    root = ttk.Window(themename="united", size=(600, 400))
+    # căn giữa khi khởi động
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    x = (sw - 600) // 2
+    y = (sh - 400) // 2
+    root.geometry(f"600x400+{x}+{y}")
+
     root.title("MyTasks - Đang khởi động...")
 
     # =Splash screen ==
@@ -347,7 +453,7 @@ def run_app():
 def start_main_app(root, splash):
     # Hủy splash, khởi tạo app chính
     splash.destroy()
-    root.iconbitmap("logo.ico")
+    root.iconbitmap("assets/logo.ico")
     app = TodoApp(root)
 
     # Căn giữa cửa sổ

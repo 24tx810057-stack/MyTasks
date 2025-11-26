@@ -428,7 +428,7 @@ class TodoApp:
 
 def run_app():
     # Các theme: cosmo, united, yeti, solar, simplex, pulse, minty, flatly
-    root = ttk.Window(themename="united", size=(600, 400))
+    root = ttk.Window(themename="pulse", size=(600, 400))
     # căn giữa khi khởi động
     sw = root.winfo_screenwidth()
     sh = root.winfo_screenheight()

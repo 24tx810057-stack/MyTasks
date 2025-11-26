@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, font
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.widgets import DateEntry
@@ -21,7 +21,7 @@ class TimeBox(ttk.Frame):
         ttk.Spinbox(self, from_=0, to=23, textvariable=self.hour, **spin_style).grid(
             row=0, column=0, padx=(0, 2)
         )
-        ttk.Label(self, text=":", font=("Segoe UI", 10, "bold")).grid(
+        ttk.Label(self, text=":").grid(    
             row=0, column=1, padx=(0, 2)
         )
         ttk.Spinbox(self, from_=0, to=59, textvariable=self.minute, **spin_style).grid(
@@ -52,15 +52,27 @@ class TodoApp:
         self.service = TaskService()
         self.tasks = self.service.tasks
 
+        # ======= FONT & STYLE: KHAI BÁO 1 LẦN =======
+        default_font = font.nametofont("TkDefaultFont")
+        default_font.configure(family="Roboto", size=10)
+
+        text_font = font.nametofont("TkTextFont")
+        text_font.configure(family="Roboto", size=10)
+
+        menu_font = font.nametofont("TkMenuFont")
+        menu_font.configure(family="Roboto", size=10)
+
         style = ttk.Style()
-        style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=6)
-        style.configure("TLabel", font=("Segoe UI", 10))
-        style.configure("TEntry", font=("Segoe UI", 10))
+        # font sẽ lấy từ TkDefaultFont (Roboto 10)
+        style.configure("TButton", padding=6)
+        style.configure("TLabel")
+        style.configure("TEntry")
+        # =============================================
 
         header = ttk.Frame(root, padding=10)
         header.pack(fill="x")
         ttk.Label(
-            header, text=" Quản lý công việc", font=("Segoe UI", 18, "bold")
+            header, text=" Quản lý công việc", font=("Roboto", 18, "bold")
         ).pack(side="left")
         ttk.Label(
             header, text="Theo dõi - Sắp xếp - Hoàn thành", bootstyle="secondary"
@@ -160,7 +172,7 @@ class TodoApp:
         cb_priority.bind("<<ComboboxSelected>>", lambda e: self.apply_filter())
 
         self.listbox = tk.Listbox(
-            listfrm, height=8, activestyle="dotbox", font=("Segoe UI", 10)
+            listfrm, height=8, activestyle="dotbox"   
         )
         self.listbox.pack(side="left", fill="both", expand=True)
         self.listbox.bind("<<ListboxSelect>>", self.on_select)

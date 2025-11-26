@@ -25,6 +25,7 @@ class Task:
     def to_dict(self):
         return self.__dict__
 
+    # chuyển dictionary thành object
     @staticmethod
     def from_dict(d):
         return Task(**d)

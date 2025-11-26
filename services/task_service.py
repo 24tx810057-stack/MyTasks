@@ -11,14 +11,14 @@ class TaskService:
         self.tasks = self.load_tasks()
         self.sort_tasks()
 
-    # === Helpers ===
+    # Utility
     def now_str(self):
         return datetime.now().strftime(DATE_FMT)
 
     def parse_dt(self, s):
         return datetime.strptime(s, DATE_FMT)
 
-    # === CRUD ===
+    #  CRUD
     def add_task(self, title, detail, deadline, priority):
         task = Task(title, detail, deadline, priority)
         self.tasks.append(task)
@@ -43,7 +43,7 @@ class TaskService:
         self.sort_tasks()
         self.save_tasks()
 
-    # === Load / Save ===
+    #  Load / Save
     def load_tasks(self):
         if not os.path.exists(DATA_FILE):
             return []
@@ -61,7 +61,7 @@ class TaskService:
                 [t.to_dict() for t in self.tasks], f, ensure_ascii=False, indent=2
             )
 
-    # === Sorting ===
+    # Sorting
     def sort_tasks(self):
         def key(t: Task):
             done = t.done
@@ -78,7 +78,7 @@ class TaskService:
 
         self.tasks.sort(key=key)
 
-    # === Format row for UI ===
+    #  Format row for UI
     def fmt_row(self, t: Task):
         status = "✔" if t.done else "X"
         overdue = ""

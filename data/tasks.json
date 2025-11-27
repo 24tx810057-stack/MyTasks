@@ -19,7 +19,7 @@
     "title": "Test trạng thái",
     "detail": "Đây là chi tiết công việc",
     "deadline": "27-11-2025 10:10",
-    "priority": "Cao",
+    "priority": "Thấp",
     "done": true,
     "created_at": "26-11-2025 14:19"
   },

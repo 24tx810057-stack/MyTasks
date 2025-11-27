@@ -52,7 +52,7 @@ class TodoApp:
         self.service = TaskService()
         self.tasks = self.service.tasks
 
-        # ======= FONT & STYLE: KHAI BÁO 1 LẦN =======
+        # 
         default_font = font.nametofont("TkDefaultFont")
         default_font.configure(family="Roboto", size=10)
 
@@ -63,11 +63,11 @@ class TodoApp:
         menu_font.configure(family="Roboto", size=10)
 
         style = ttk.Style()
-        # font sẽ lấy từ TkDefaultFont (Roboto 10)
+        # 
         style.configure("TButton", padding=6)
         style.configure("TLabel")
         style.configure("TEntry")
-        # =============================================
+        # 
 
         header = ttk.Frame(root, padding=10)
         header.pack(fill="x")
